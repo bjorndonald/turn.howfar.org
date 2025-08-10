@@ -23,11 +23,14 @@ RUN mkdir /opt/stunserver
 COPY --from=build /opt/stunserver/stunclient /opt/stunserver/stunclient
 COPY --from=build /opt/stunserver/stunserver /opt/stunserver/stunserver
 
-# Copy and set up the startup script
-COPY start.sh /opt/stunserver/start.sh
-RUN chmod +x /opt/stunserver/start.sh
-
 WORKDIR /opt/stunserver
+
+# Create a simple startup script inline to avoid file copying issues
+RUN echo '#!/bin/bash\n\
+echo "Starting STUN server..."\n\
+echo "Server will listen on port 3478"\n\
+exec /opt/stunserver/stunserver --primaryport 3478\n\
+' > /opt/stunserver/start.sh && chmod +x /opt/stunserver/start.sh
 
 # Simple healthcheck that just checks if the process is running
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
