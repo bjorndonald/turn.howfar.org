@@ -25,12 +25,7 @@ COPY --from=build /opt/stunserver/stunserver /opt/stunserver/stunserver
 
 WORKDIR /opt/stunserver
 
-# Verify the binary exists and is executable
-RUN ls -la /opt/stunserver/
-RUN file /opt/stunserver/stunserver
-RUN /opt/stunserver/stunserver --help || echo "Help command failed, but binary exists"
-
-# Start the STUN server directly without healthcheck
+# Start the STUN server directly
 CMD ["/opt/stunserver/stunserver", "--primaryport", "3478"]
 
 
