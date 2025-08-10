@@ -1,23 +1,32 @@
-# Use a multi-architecture base image for better compatibility
-FROM --platform=linux/amd64 alpine:latest
+FROM ubuntu:18.04 as build
 
-# Install necessary runtime dependencies
-RUN apk add --no-cache ca-certificates
+RUN set -ex && \
+    apt-get update && \
+    apt-get install -y build-essential && \
+    apt-get install -y libboost-all-dev && \
+    apt-get install -y libssl-dev && \
+    apt-get install -y g++ && \
+    apt-get install -y make && \
+    apt-get install -y git && \
+    apt-get clean -y && \
+    rm -rf /var/lib/apt/lists/*
 
-# Set the working directory
-WORKDIR /app
+RUN cd /opt && git clone https://github.com/jselbie/stunserver.git && cd stunserver && make
 
-# Copy the STUN server binary
-COPY stunserver /app/stunserver
+FROM ubuntu:18.04
 
-# Make the binary executable
-RUN chmod +x /app/stunserver
+EXPOSE 3478/tcp 3478/udp
 
-# Verify the binary architecture (debugging)
-RUN file /app/stunserver || echo "Binary architecture check failed"
+RUN apt update && apt install libssl1.1 && apt-get clean
 
-# Expose the STUN server port
-EXPOSE 3478
+RUN mkdir /opt/stunserver
+COPY --from=build /opt/stunserver/stunclient /opt/stunserver/stunclient
+COPY --from=build /opt/stunserver/stunserver /opt/stunserver/stunserver
 
-# Set the default command
-CMD ["./stunserver", "--primaryport", "3478"] 
+WORKDIR /opt/stunserver
+
+HEALTHCHECK CMD /opt/stunserver/stunclient localhost
+
+ENTRYPOINT ["/opt/stunserver/stunserver"]
+
+
