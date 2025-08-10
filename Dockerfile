@@ -25,18 +25,12 @@ COPY --from=build /opt/stunserver/stunserver /opt/stunserver/stunserver
 
 WORKDIR /opt/stunserver
 
-# Create a simple startup script inline to avoid file copying issues
-RUN echo '#!/bin/bash\n\
-echo "Starting STUN server..."\n\
-echo "Server will listen on port 3478"\n\
-exec /opt/stunserver/stunserver --primaryport 3478\n\
-' > /opt/stunserver/start.sh && chmod +x /opt/stunserver/start.sh
+# Verify the binary exists and is executable
+RUN ls -la /opt/stunserver/
+RUN file /opt/stunserver/stunserver
+RUN /opt/stunserver/stunserver --help || echo "Help command failed, but binary exists"
 
-# Simple healthcheck that just checks if the process is running
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD pgrep stunserver || exit 1
-
-# Use the startup script as the entrypoint
-ENTRYPOINT ["/opt/stunserver/start.sh"]
+# Start the STUN server directly without healthcheck
+CMD ["/opt/stunserver/stunserver", "--primaryport", "3478"]
 
 
