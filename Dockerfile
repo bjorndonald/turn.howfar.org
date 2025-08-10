@@ -23,10 +23,17 @@ RUN mkdir /opt/stunserver
 COPY --from=build /opt/stunserver/stunclient /opt/stunserver/stunclient
 COPY --from=build /opt/stunserver/stunserver /opt/stunserver/stunserver
 
+# Copy and set up the startup script
+COPY start.sh /opt/stunserver/start.sh
+RUN chmod +x /opt/stunserver/start.sh
+
 WORKDIR /opt/stunserver
 
-HEALTHCHECK CMD /opt/stunserver/stunclient localhost
+# Simple healthcheck that just checks if the process is running
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD pgrep stunserver || exit 1
 
-ENTRYPOINT ["/opt/stunserver/stunserver"]
+# Use the startup script as the entrypoint
+ENTRYPOINT ["/opt/stunserver/start.sh"]
 
 

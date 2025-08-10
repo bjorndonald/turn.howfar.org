@@ -5,6 +5,7 @@
 # Documentation and other files
 README.md
 *.md
+RAILWAY_DEPLOYMENT.md
 
 # Test files (not needed in production)
 stuntestcode
@@ -27,4 +28,7 @@ Thumbs.db
 *~
 
 # Logs
-*.log 
+*.log
+
+# Railway files
+railway.toml 
