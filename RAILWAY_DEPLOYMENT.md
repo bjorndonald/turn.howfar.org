@@ -63,6 +63,40 @@ Once deployed, Railway will provide you with:
 2. **Binary Permissions**: The Dockerfile sets proper execute permissions
 3. **Health Check Failures**: Verify the server starts successfully
 
+### Critical Issue: "Exec format error"
+
+**Error**: `exec container process '/app/./stunserver': Exec format error`
+
+**Cause**: This error occurs when the binary architecture doesn't match the container architecture. Your `stunserver` binary was compiled for macOS (darwin) but Railway's Docker containers run on Linux.
+
+**Solutions**:
+
+#### Option 1: Cross-compile for Linux (Recommended)
+If you have access to the source code:
+
+1. **For Go projects**:
+   ```bash
+   GOOS=linux GOARCH=amd64 go build -o stunserver-linux ./path/to/source
+   ```
+
+2. **For C/C++ projects**:
+   ```bash
+   gcc -o stunserver-linux source.c -static
+   ```
+
+3. **Using Docker for cross-compilation**:
+   ```bash
+   docker run --rm -v $(pwd):/src -w /src golang:alpine go build -o stunserver-linux ./path/to/source
+   ```
+
+4. Replace the binary and remove the `--platform=linux/amd64` flag from Dockerfile
+
+#### Option 2: Use Alternative Dockerfile
+Use `Dockerfile.source` which builds from source (requires source code access)
+
+#### Option 3: Build Script
+Run the provided `build-linux-binary.sh` script to check your build environment
+
 ### Logs
 Check Railway logs in the dashboard to debug any issues:
 - Build logs: Show Docker build process
